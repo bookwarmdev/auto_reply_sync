@@ -1,7 +1,8 @@
 name: auto_reply_sync
 description: To address the issue of asking font-end to deliver a response, establish a mobile tool called logger.
 version: 0.0.1
-homepage:
+homepage: https://github.com/bookwarmdev/auto_reply_sync.git
+repository: https://github.com/bookwarmdev/auto_reply_sync.git
 
 environment:
   sdk: '>=3.0.5 <4.0.0'
