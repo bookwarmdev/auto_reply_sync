@@ -9,18 +9,22 @@ import 'package:flutter/material.dart';
 // }
 
 class ReponsiveRowColumn extends StatefulWidget {
-  const ReponsiveRowColumn({super.key});
+  final Widget widget1;
+  final Widget widget2;
+  final Widget widget3;
+
+  const ReponsiveRowColumn({
+    super.key,
+    required this.widget1,
+    required this.widget2,
+    required this.widget3,
+  });
 
   @override
   State<ReponsiveRowColumn> createState() => _ReponsiveRowColumnState();
 }
 
 class _ReponsiveRowColumnState extends State<ReponsiveRowColumn> {
-  
-  late final Widget widget1;
-  late final Widget widget2;
-  late final Widget widget3;
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -28,17 +32,17 @@ class _ReponsiveRowColumnState extends State<ReponsiveRowColumn> {
         if (constraints.maxWidth < 600) {
           return Column(
             children: [
-              widget1,
-              widget2,
-              widget3,
+              widget.widget1,
+              widget.widget2,
+              widget.widget3,
             ],
           );
         } else {
           return Row(
             children: [
-              widget1,
-              widget2,
-              widget3,
+              widget.widget1,
+              widget.widget2,
+              widget.widget3,
             ],
           );
         }
