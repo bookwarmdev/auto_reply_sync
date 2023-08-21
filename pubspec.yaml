@@ -5,12 +5,15 @@ homepage: https://github.com/bookwarmdev/auto_reply_sync.git
 repository: https://github.com/bookwarmdev/auto_reply_sync.git
 
 environment:
-  sdk: '>=3.0.5 <4.0.0'
+  sdk: ">=3.0.5 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
   flutter:
     sdk: flutter
+
+  draggable_fab: ^0.1.4
+  path_provider:
 
 dev_dependencies:
   flutter_test:
