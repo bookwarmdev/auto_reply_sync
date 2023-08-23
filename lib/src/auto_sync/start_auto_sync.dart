@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -9,6 +8,9 @@ class StartAutoSync {
   StartAutoSync._();
 
   static Directory? _directory;
+
+  static File _file({required String fileName}) =>
+      File("${_directory?.path}/$fileName.txt");
 
   static Future get instance => _instance();
 
@@ -48,9 +50,7 @@ class StartAutoSync {
   static Future<bool> hasAutoSync({required String fileName}) async {
     await _directoryChecker();
     try {
-      final file = File("${_directory?.path}/$fileName");
-      log("message ${file.path}");
-      return file.existsSync();
+      return _file(fileName: fileName).existsSync();
     } catch (e) {
       log("hasAutoSync $e");
       return false;
@@ -58,15 +58,22 @@ class StartAutoSync {
   }
 
   static void deleteAutoSync({required String fileName}) async {
-    // await _directoryChecker();
     if (_directory == null) {
       throw Exception("No Instance not found.");
     }
     try {
-      final file = File("${_directory?.path}/$fileName");
-      file.deleteSync();
+      bool isExists = _file(fileName: fileName).existsSync();
+
+      if (isExists) {
+        log(isExists.toString());
+        _file(fileName: fileName).deleteSync();
+      }
     } on PlatformException catch (e) {
-      log(e.message.toString());
+      if (e.message == "Cannot delete file") {
+        log("Can not delete file  $e");
+      } else {
+        log(e.message.toString());
+      }
       return;
     } catch (e) {
       log("deleteAutoSync $e");
@@ -74,14 +81,30 @@ class StartAutoSync {
     }
   }
 
-  static void setAutoSync(
-      {required String fileName, required dynamic contents}) async {
+  static void clearAutoSync({required String fileName}) async {
+    await _directoryChecker();
+    try {
+      String contents = "No recode found";
+      _callBack(contents, (data) {
+        _file(fileName: fileName).writeAsStringSync(
+          contents,
+        );
+      });
+    } catch (e) {
+      log("clearAutoSync $e");
+      return;
+    }
+  }
+
+  static void setAutoSync({
+    required String fileName,
+    required dynamic contents,
+  }) async {
     await _directoryChecker();
     try {
       _callBack(contents, (data) {
-        final file = File("${_directory?.path}/$fileName");
-        file.writeAsStringSync(
-          "$contents\n",
+        _file(fileName: fileName).writeAsStringSync(
+          "$contents\n ============================ \n",
           flush: false,
           mode: FileMode.append,
         );
@@ -92,11 +115,12 @@ class StartAutoSync {
     }
   }
 
-  static dynamic getAutoSync({required String fileName}) async {
+  static dynamic getAutoSync({
+    required String fileName,
+  }) async {
     await _directoryChecker();
     try {
-      final file = File('${_directory!.path}/$fileName');
-      return file.readAsStringSync();
+      return _file(fileName: fileName).readAsStringSync();
     } catch (e) {
       log("getAutoSync $e");
       return;
