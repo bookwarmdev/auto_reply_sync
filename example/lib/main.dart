@@ -101,7 +101,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             BackButton(
               onPressed: () {
-                setState(() {});
+                // setState(() {})
+                // getAutoSyncProvider
                 StartAutoSync.setAutoSync(
                     fileName: fileName, contents: contents);
               },

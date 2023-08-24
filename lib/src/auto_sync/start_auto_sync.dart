@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:auto_reply_sync/auto_reply_sync.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:riverpod/riverpod.dart';
 
 class StartAutoSync {
-  StartAutoSync._();
+  // StartAutoSync._();
 
   static Directory? _directory;
 
@@ -84,7 +87,7 @@ class StartAutoSync {
   static void clearAutoSync({required String fileName}) async {
     await _directoryChecker();
     try {
-      String contents = "No recode found";
+      String contents = "";
       _callBack(contents, (data) {
         _file(fileName: fileName).writeAsStringSync(
           contents,
@@ -109,6 +112,7 @@ class StartAutoSync {
           mode: FileMode.append,
         );
       });
+      getAutoSyncProvider(fileName);
     } catch (e) {
       log("setAutoSync $e");
       return;
@@ -123,6 +127,64 @@ class StartAutoSync {
       return _file(fileName: fileName).readAsStringSync();
     } catch (e) {
       log("getAutoSync $e");
+      return;
+    }
+  }
+}
+
+final getAutoSyncProvider = StateNotifierProviderFamily<
+    FechRecentFileDataNotifier, InputFileDataState, String>(
+  (ref, fileName) {
+    return FechRecentFileDataNotifier(
+      InputFileDataState(fileName: fileName, contents: ""),
+    );
+  },
+);
+
+class InputFileDataState {
+  String fileName;
+  dynamic contents;
+
+  InputFileDataState({required this.fileName, required this.contents});
+}
+
+class FechRecentFileDataNotifier extends StateNotifier<InputFileDataState> {
+  // final String fileName;
+  FechRecentFileDataNotifier(InputFileDataState inputFileDataState)
+      : super(inputFileDataState);
+
+  dynamic getAutoSync(ScrollController scrollController) async {
+    await StartAutoSync._directoryChecker();
+    try {
+      final contents =
+          StartAutoSync._file(fileName: state.fileName).readAsStringSync();
+      state = InputFileDataState(fileName: state.fileName, contents: contents);
+      // WidgetsBinding.instance.addPostFrameCallback((_) {
+      // scrollController.animateTo(
+      //   scrollController.position.maxScrollExtent,
+      //   duration: const Duration(milliseconds: 100),
+      //   curve: Curves.easeInOut,
+      // );
+      // });
+      return contents;
+    } catch (e) {
+      log("getAutoSync $e");
+      return;
+    }
+  }
+
+  setAutoSync(dynamic contents) async {
+    await StartAutoSync._directoryChecker();
+    try {
+      StartAutoSync._callBack(contents, (data) {
+        StartAutoSync._file(fileName: state.fileName).writeAsStringSync(
+          "$contents\n ============================ \n",
+          flush: false,
+          mode: FileMode.append,
+        );
+      });
+    } catch (e) {
+      log("setAutoSync $e");
       return;
     }
   }

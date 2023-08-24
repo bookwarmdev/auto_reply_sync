@@ -13,9 +13,11 @@ dependencies:
     sdk: flutter
 
   draggable_fab: ^0.1.4
-  pointycastle: ^3.2.0
-  encryptor: ^0.0.1
+  # pointycastle: ^3.2.0
+  # encryptor: ^0.0.1
   path_provider:
+  riverpod: ^2.3.7
+  flutter_riverpod: ^2.3.7
 
 dev_dependencies:
   flutter_test:

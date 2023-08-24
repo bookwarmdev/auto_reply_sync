@@ -1,6 +1,7 @@
 import 'package:auto_reply_sync/auto_reply_sync.dart';
 import 'package:draggable_fab/draggable_fab.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AutoReplySubcViewer extends StatefulWidget {
   final Widget body;
@@ -80,123 +81,116 @@ class _AutoReplySubcViewerState extends State<AutoReplySubcViewer>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: DraggableFab(
-        child: FloatingActionButton(
-          onPressed: _inEngage,
-          tooltip: 'Auto Reply Sync',
-          child: const Icon(
-            Icons.api_sharp,
+    final provider = getAutoSyncProvider(widget.autoReplySyncName);
+    return ProviderScope(
+      child: Scaffold(
+        floatingActionButton: DraggableFab(
+          child: FloatingActionButton(
+            onPressed: _inEngage,
+            tooltip: 'Auto Reply Sync',
+            child: const Icon(
+              Icons.api_sharp,
+            ),
           ),
         ),
-      ),
-      body: Stack(
-        children: [
-          widget.body,
-          Visibility(
-            visible: _isEngage,
-            child: GestureDetector(
-              onPanStart: (details) {},
-              onPanEnd: (details) {},
-              onPanUpdate: (details) {},
-              onVerticalDragUpdate: (details) {
-                setState(() {
-                  height += details.delta.dy;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: double.infinity,
-                height: height < 100.0 ? 100.0 : height,
-                decoration: BoxDecoration(
-                  color: widget.backgroundColor.withOpacity(0.8),
-                  border: Border(
-                      bottom: BorderSide(
-                    color: widget.backgroundColor.withOpacity(0.9),
-                    width: 10,
-                  )),
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          color: widget.iconColor,
-                          onPressed: () => setState(() {
-                            StartAutoSync.clearAutoSync(
-                              fileName: widget.autoReplySyncName,
-                            );
-                          }),
-                          icon: Text(
-                            "Clear Log",
-                            style: TextStyle(
-                              color: widget.iconColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          color: widget.iconColor,
-                          onPressed: () => setState(() {
-                            _resizeARSContiner(context);
-                          }),
-                          icon: Icon(
-                            _resizer == true
-                                ? Icons.zoom_out_map
-                                : Icons.zoom_in_map,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        controller: scrollController,
-                        child: Column(
-                          children: [
-                            FutureBuilder(
-                              future: StartAutoSync.getAutoSync(
+        body: Stack(
+          children: [
+            widget.body,
+            Visibility(
+              visible: _isEngage,
+              child: GestureDetector(
+                onPanStart: (details) {},
+                onPanEnd: (details) {},
+                onPanUpdate: (details) {},
+                onVerticalDragUpdate: (details) {
+                  setState(() {
+                    height += details.delta.dy;
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: double.infinity,
+                  height: height < 100.0 ? 100.0 : height,
+                  decoration: BoxDecoration(
+                    color: widget.backgroundColor.withOpacity(0.8),
+                    border: Border(
+                        bottom: BorderSide(
+                      color: widget.backgroundColor.withOpacity(0.9),
+                      width: 10,
+                    )),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          InkWell(
+                            // color: widget.iconColor,
+                            onTap: () => setState(() {
+                              StartAutoSync.clearAutoSync(
                                 fileName: widget.autoReplySyncName,
+                              );
+                            }),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                "Clear Log",
+                                style: TextStyle(
+                                  color: widget.iconColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              builder: (context, snapshot) {
-                                // _moveToButtom();
-                                if (snapshot.hasError) {
-                                  return Text(snapshot.hasError.toString());
-                                } else {
-                                  WidgetsBinding.instance
-                                      .addPostFrameCallback((_) {
-                                    scrollController.animateTo(
-                                      scrollController.position.maxScrollExtent,
-                                      duration:
-                                          const Duration(milliseconds: 200),
-                                      curve: Curves.easeInOut,
-                                    );
-                                  });
-                                  return Center(
-                                    child: SelectableText(
-                                      snapshot.data == null
-                                          ? "No recode found"
-                                          : snapshot.data.toString(),
-                                      style: widget.textStyle,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  );
-                                }
-                              },
                             ),
-                          ],
+                          ),
+                          IconButton(
+                            color: widget.iconColor,
+                            onPressed: () => setState(() {
+                              _resizeARSContiner(context);
+                            }),
+                            icon: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Icon(
+                                _resizer == true
+                                    ? Icons.zoom_out_map
+                                    : Icons.zoom_in_map,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              final feed = ref.watch(provider);
+                              ref
+                                  .watch(provider.notifier)
+                                  .getAutoSync(scrollController);
+
+                              return Center(
+                                child: SelectableText(
+                                  feed.contents.toString().isEmpty
+                                      ? "No recode found"
+                                      : feed.contents,
+                                  style: widget.textStyle,
+                                  textAlign: TextAlign.center,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
