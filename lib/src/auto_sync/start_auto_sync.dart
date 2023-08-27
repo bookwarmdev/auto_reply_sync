@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'package:auto_reply_sync/auto_reply_sync.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -105,7 +104,10 @@ class StartAutoSync {
   }) async {
     await _directoryChecker();
     try {
-      _callBack(contents, (data) {
+      log(_file(fileName: fileName).path);
+
+      _callBack(contents, (data)async {
+        // final contentEncrypt = await EncryptAutoSyncFile.encryptAutoSyncFile(inputFile: "$contents\n ============================ \n",);
         _file(fileName: fileName).writeAsStringSync(
           "$contents\n ============================ \n",
           flush: false,
@@ -124,7 +126,8 @@ class StartAutoSync {
   }) async {
     await _directoryChecker();
     try {
-      return _file(fileName: fileName).readAsStringSync();
+      final contents = _file(fileName: fileName).readAsStringSync();
+      return contents;
     } catch (e) {
       log("getAutoSync $e");
       return;
@@ -133,9 +136,9 @@ class StartAutoSync {
 }
 
 final getAutoSyncProvider = StateNotifierProviderFamily<
-    FechRecentFileDataNotifier, InputFileDataState, String>(
+    FetchRecentFileDataNotifier, InputFileDataState, String>(
   (ref, fileName) {
-    return FechRecentFileDataNotifier(
+    return FetchRecentFileDataNotifier(
       InputFileDataState(fileName: fileName, contents: ""),
     );
   },
@@ -148,17 +151,25 @@ class InputFileDataState {
   InputFileDataState({required this.fileName, required this.contents});
 }
 
-class FechRecentFileDataNotifier extends StateNotifier<InputFileDataState> {
+class FetchRecentFileDataNotifier extends StateNotifier<InputFileDataState> {
   // final String fileName;
-  FechRecentFileDataNotifier(InputFileDataState inputFileDataState)
+  FetchRecentFileDataNotifier(InputFileDataState inputFileDataState)
       : super(inputFileDataState);
 
   dynamic getAutoSync(ScrollController scrollController) async {
     await StartAutoSync._directoryChecker();
     try {
+
       final contents =
           StartAutoSync._file(fileName: state.fileName).readAsStringSync();
+      // final String decryptContents =
+      // await EncryptAutoSyncFile.decryptAutoSyncFile(
+      //   inputFile: StartAutoSync._file(fileName: state.fileName).readAsStringSync(),
+      // );
+      // print("<============== $contents ================>");
+      // print(decryptContents);
       state = InputFileDataState(fileName: state.fileName, contents: contents);
+
       // WidgetsBinding.instance.addPostFrameCallback((_) {
       // scrollController.animateTo(
       //   scrollController.position.maxScrollExtent,
@@ -166,25 +177,8 @@ class FechRecentFileDataNotifier extends StateNotifier<InputFileDataState> {
       //   curve: Curves.easeInOut,
       // );
       // });
-      return contents;
     } catch (e) {
-      log("getAutoSync $e");
-      return;
-    }
-  }
-
-  setAutoSync(dynamic contents) async {
-    await StartAutoSync._directoryChecker();
-    try {
-      StartAutoSync._callBack(contents, (data) {
-        StartAutoSync._file(fileName: state.fileName).writeAsStringSync(
-          "$contents\n ============================ \n",
-          flush: false,
-          mode: FileMode.append,
-        );
-      });
-    } catch (e) {
-      log("setAutoSync $e");
+      log("getAutoSync provider $e");
       return;
     }
   }

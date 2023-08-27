@@ -3,6 +3,8 @@ import 'package:draggable_fab/draggable_fab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'auto_sync/encrypt_auto_sync_file.dart';
+
 class AutoReplySubcViewer extends StatefulWidget {
   final Widget body;
   final String autoReplySyncName;
@@ -27,7 +29,7 @@ class _AutoReplySubcViewerState extends State<AutoReplySubcViewer>
     with WidgetsBindingObserver {
   bool _isEngage = false;
   bool _resizer = false;
-  double height = 100.0;
+  double height = 200.0;
 
   final ScrollController scrollController = ScrollController();
 
@@ -128,7 +130,6 @@ class _AutoReplySubcViewerState extends State<AutoReplySubcViewer>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           InkWell(
-                            // color: widget.iconColor,
                             onTap: () => setState(() {
                               StartAutoSync.clearAutoSync(
                                 fileName: widget.autoReplySyncName,
