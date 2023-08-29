@@ -13,7 +13,7 @@ class AutoReplySubcViewer extends StatefulWidget {
   final TextStyle? textStyle;
 
   const AutoReplySubcViewer({
-    super.key,
+    // super.key,
     required this.body,
     required this.autoReplySyncName,
     this.backgroundColor = Colors.grey,
