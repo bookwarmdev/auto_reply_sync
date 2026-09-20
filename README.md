@@ -1,39 +1,109 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# auto_reply_sync
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages).
+In-app floating logger for Flutter — structured events, levels, search/filter, **easy network capture**, and a DevTools-style overlay.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages).
--->
+## How to view the floating log icon
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
-
-## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+Wrap your app (or any screen) with `AutoReplyLoggerViewer`. A **draggable terminal FAB** appears on top of your UI.
 
 ```dart
-const like = 'sample';
+import 'package:auto_reply_sync/auto_reply_sync.dart';
+import 'package:flutter/material.dart';
+
+void main() {
+  logger.configure(const LoggerConfig(enabled: true, maxEntries: 500));
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: AutoReplyLoggerViewer(
+        // Optional: fabColor, backgroundColor, showFab: false
+        child: const HomePage(),
+      ),
+    );
+  }
+}
 ```
 
-## Additional information
+### Using the overlay
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+1. **Open** — tap the floating terminal icon (drag it to reposition).
+2. **Browse logs** — newest entries appear in the bottom panel.
+3. **Search** — type in the search field.
+4. **Filter** — tap the filter icon to select log levels and/or **Network only**.
+5. **API detail** — tap a network row for **Timing / Headers / Payload / Preview / Response** (copy cURL from the toolbar).
+6. **Toolbar** — pause/resume logging, clear, export (clipboard), expand/collapse, close.
+
+Emit logs from anywhere:
+
+```dart
+logger.i('Hello', source: 'HomePage');
+logger.e('Failed', source: 'Api', properties: {'status': 500});
+```
+
+Try the demo:
+
+```bash
+cd example && flutter run
+```
+
+## Network map → one-line wiring
+
+```
+NETWORKING
+    ├── REST
+    │     ├── http      → LoggingHttpClient()
+    │     ├── Dio       → AutoReplyDioInterceptor()
+    │     ├── Retrofit  → RetrofitNetwork.interceptor()
+    │     ├── Chopper   → AutoReplyChopperInterceptor() / ChopperNetwork.interceptor()
+    │     └── OpenAPI   → OpenApiNetwork.dioInterceptor() or OpenApiNetwork.httpClient()
+    ├── GraphQL         → GraphQlNetwork.trace(...) / NetworkLogger.graphql(...)
+    ├── gRPC            → NetworkLogger.grpc(...)
+    ├── WebSocket       → RealtimeNetwork.ws(...)
+    └── SSE             → RealtimeNetwork.listenSse(...) / NetworkLogger.sse(...)
+```
+
+### Dio
+
+```dart
+final dio = Dio()..interceptors.add(AutoReplyDioInterceptor());
+```
+
+### Retrofit (`package:retrofit`)
+
+```dart
+final dio = Dio()..interceptors.add(RetrofitNetwork.interceptor());
+final api = RestClient(dio);
+```
+
+### Chopper
+
+```dart
+final chopper = ChopperClient(
+  baseUrl: Uri.parse('https://api.example.com'),
+  interceptors: [ChopperNetwork.interceptor()],
+);
+```
+
+### OpenAPI / Swagger generated clients
+
+```dart
+// Dio-based generator
+final dio = Dio()..interceptors.add(OpenApiNetwork.dioInterceptor());
+
+// http-based generator
+final api = DefaultApi(OpenApiNetwork.httpClient());
+```
+
+### http package
+
+```dart
+final client = LoggingHttpClient();
+```
+
+Open the floating terminal and tap **NET**. Detail sheet can **Copy cURL**. Stack shows as `retrofit` / `chopper` / `openapi` in log properties.
